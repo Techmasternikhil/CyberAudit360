@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import Base
 
 class EvidenceType(str, enum.Enum):
@@ -21,7 +21,7 @@ class Evidence(Base):
     evidence_type = Column(Enum(EvidenceType))
     source = Column(String)
     collector = Column(String)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     description = Column(String)
     hash_value = Column(String, nullable=True) # SHA-256
     

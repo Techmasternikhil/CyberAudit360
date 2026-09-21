@@ -47,5 +47,6 @@ frontend/dist-ssr/
 Thumbs.db
 
 # Reports outputs (generated scans)
-reports/*.pdf
-reports/*.html
+reports/*
+!reports/.gitkeep
+

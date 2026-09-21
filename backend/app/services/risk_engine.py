@@ -21,7 +21,24 @@ class RiskEngine:
     }
 
     @staticmethod
-    def calculate_finding_risk(finding: Finding, asset_criticality: str = "MEDIUM") -> float:
+    def extract_criticality(crit_or_asset: Any = "MEDIUM") -> str:
+        """Normalizes criticality from an Asset instance, BusinessCriticality enum, or string."""
+        if hasattr(crit_or_asset, "business_criticality"):
+            crit_or_asset = crit_or_asset.business_criticality
+        if hasattr(crit_or_asset, "value"):
+            return str(crit_or_asset.value).upper()
+        return str(crit_or_asset or "MEDIUM").upper()
+
+    @staticmethod
+    def is_finding_unresolved(finding: Any) -> bool:
+        """Single source of truth for whether a finding is active and unresolved."""
+        status_val = str(getattr(finding, "status", "OPEN"))
+        if hasattr(getattr(finding, "status", None), "value"):
+            status_val = finding.status.value
+        return status_val.upper() not in ("RESOLVED", "CLOSED", "MITIGATED", "FALSE_POSITIVE")
+
+    @staticmethod
+    def calculate_finding_risk(finding: Finding, asset_criticality: Any = "MEDIUM") -> float:
         likelihood = finding.likelihood if finding.likelihood is not None else 3
         impact = finding.impact if finding.impact is not None else 3
         base_score = finding.cvss_score if finding.cvss_score is not None else (likelihood * impact) / 2.5
@@ -30,7 +47,8 @@ class RiskEngine:
         exposure_multiplier = 1.3 if finding.internet_exposed else 1.0
         kev_multiplier = 1.5 if finding.kev_status else 1.0
 
-        asset_mult = RiskEngine.CRITICALITY_MULTIPLIER.get(asset_criticality, 1.0)
+        crit_key = RiskEngine.extract_criticality(asset_criticality)
+        asset_mult = RiskEngine.CRITICALITY_MULTIPLIER.get(crit_key, 1.0)
         
         final_risk = base_score * exposure_multiplier * kev_multiplier * asset_mult
         
@@ -42,9 +60,13 @@ class RiskEngine:
         """Calculates a 0-100 security score."""
         score = 100
         
-        critical_count = sum(1 for f in findings if f.severity == "CRITICAL" and f.status != "RESOLVED")
-        high_count = sum(1 for f in findings if f.severity == "HIGH" and f.status != "RESOLVED")
-        medium_count = sum(1 for f in findings if f.severity == "MEDIUM" and f.status != "RESOLVED")
+        def is_unresolved_severity(f, target_sev: str) -> bool:
+            sev = str(getattr(f.severity, "value", f.severity)).upper()
+            return sev == target_sev and RiskEngine.is_finding_unresolved(f)
+
+        critical_count = sum(1 for f in findings if is_unresolved_severity(f, "CRITICAL"))
+        high_count = sum(1 for f in findings if is_unresolved_severity(f, "HIGH"))
+        medium_count = sum(1 for f in findings if is_unresolved_severity(f, "MEDIUM"))
         
         penalties = (critical_count * 15) + (high_count * 5) + (medium_count * 2)
         score -= penalties

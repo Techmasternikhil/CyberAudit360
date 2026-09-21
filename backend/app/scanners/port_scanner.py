@@ -20,9 +20,37 @@ class PortScanner:
         1433: "MSSQL",
         3306: "MySQL",
         3389: "RDP",
+        5173: "Vite Dev Server",
         5432: "PostgreSQL",
+        8000: "Uvicorn API Server",
         8080: "HTTP-Alt"
     }
+
+    PORT_SEVERITY_RULES = {
+        21: "HIGH",      # Plaintext Telnet/FTP
+        23: "HIGH",      # Plaintext Telnet/FTP
+        22: "MEDIUM",    # SSH exposure
+        445: "MEDIUM",   # SMB exposure
+        1433: "MEDIUM",  # Database exposure
+        3306: "MEDIUM",  # Database exposure
+        3389: "MEDIUM",  # RDP exposure
+        5432: "MEDIUM",  # Database exposure
+        80: "LOW",       # Web port
+        443: "LOW",      # HTTPS port
+        5173: "LOW",     # Dev frontend
+        8000: "LOW",     # Dev backend API
+        8080: "LOW",     # Alt web
+    }
+
+    @staticmethod
+    def get_port_severity(port: int) -> str:
+        """Determines standard severity level for an identified open port."""
+        return PortScanner.PORT_SEVERITY_RULES.get(port, "INFORMATIONAL")
+
+    @staticmethod
+    def get_default_ports() -> List[int]:
+        """Returns sorted list of standard ports to audit."""
+        return sorted(list(PortScanner.COMMON_PORTS.keys()))
 
     @staticmethod
     def scan_port(ip: str, port: int, timeout: float = 0.5) -> Dict[str, Any]:

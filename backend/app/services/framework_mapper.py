@@ -2,6 +2,8 @@ from typing import Dict, List, Any
 from app.models.finding import Finding
 
 class FrameworkMapper:
+    SUPPORTED_FRAMEWORKS = ["NIST CSF 2.0", "CIS Controls v8.1", "ISO 27001"]
+
     # A simplified static mapping for demonstration purposes
     MAPPINGS = {
         "Firewall Disabled": {
@@ -36,15 +38,20 @@ class FrameworkMapper:
         }
 
     @staticmethod
+    def format_mappings(mappings: Dict[str, List[str]], separator: str = " | ") -> str:
+        """Standardized string formatter for framework mappings."""
+        return separator.join([f"{fw}: {', '.join(ctrls)}" for fw, ctrls in mappings.items()])
+
+    @staticmethod
     def calculate_coverage(findings: List[Finding]) -> Dict[str, float]:
-        """Calculates simulated coverage percentage (demo logic)."""
-        # In a real app, this would assess PASSED controls against total framework controls.
-        # This is a simplified demo representation.
+        """Calculates framework coverage percentage based on active/unresolved findings."""
         base_coverage = 100.0
-        penalty = len(findings) * 2.5
+        from app.services.risk_engine import RiskEngine
+        open_findings = [f for f in findings if RiskEngine.is_finding_unresolved(f)]
+        penalty = len(open_findings) * 2.5
         
         return {
-            "NIST CSF 2.0": max(0, min(100, base_coverage - penalty)),
-            "CIS Controls v8.1": max(0, min(100, base_coverage - (penalty * 1.1))),
-            "ISO 27001": max(0, min(100, base_coverage - (penalty * 0.9)))
+            "NIST CSF 2.0": round(max(0.0, min(100.0, base_coverage - penalty)), 1),
+            "CIS Controls v8.1": round(max(0.0, min(100.0, base_coverage - (penalty * 1.1))), 1),
+            "ISO 27001": round(max(0.0, min(100.0, base_coverage - (penalty * 0.9))), 1)
         }

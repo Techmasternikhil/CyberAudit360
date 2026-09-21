@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.asset import Asset, AssetType
 from app.scanners.local_inventory import LocalInventoryScanner
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 class InventoryService:
     @staticmethod
@@ -20,7 +20,7 @@ class InventoryService:
             db_asset.os_name = info["os_name"]
             db_asset.os_version = info["os_version"]
             db_asset.architecture = info["architecture"]
-            db_asset.discovery_timestamp = datetime.utcnow()
+            db_asset.discovery_timestamp = datetime.now(timezone.utc)
         else:
             db_asset = Asset(
                 id=str(uuid.uuid4()),

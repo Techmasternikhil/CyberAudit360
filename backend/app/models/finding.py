@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, DateTime, Enum, ForeignKey, Integer, Float, Boolean
 from sqlalchemy.orm import relationship
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import Base
 
 class Severity(str, enum.Enum):
@@ -49,8 +49,8 @@ class Finding(Base):
     status = Column(Enum(FindingStatus), default=FindingStatus.OPEN)
     is_demo = Column(Boolean, default=False)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     asset = relationship("Asset", back_populates="findings")
     audit = relationship("Audit", back_populates="findings")

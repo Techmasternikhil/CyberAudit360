@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from app.models.asset import Asset, AssetType, BusinessCriticality
 from app.models.finding import Finding, Severity, FindingStatus
 from app.models.audit import Audit, AuditStatus
+from app.models.evidence import Evidence
+from app.models.remediation import Remediation
 from app.services.risk_engine import RiskEngine
 
 class SeedService:
@@ -96,8 +98,10 @@ class SeedService:
 
     @staticmethod
     def reset_all_data(db: Session):
-        """Clears all findings, assets, and audits for a fresh clean state."""
+        """Clears all remediations, findings, evidence, assets, and audits for a fresh clean state."""
+        db.query(Remediation).delete()
         db.query(Finding).delete()
+        db.query(Evidence).delete()
         db.query(Asset).delete()
         db.query(Audit).delete()
         db.commit()

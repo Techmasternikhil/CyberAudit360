@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import Base
 
 class AuditStatus(str, enum.Enum):
@@ -19,7 +19,7 @@ class Audit(Base):
     organization = Column(String)
     scope = Column(String)
     assessment_type = Column(String)
-    start_date = Column(DateTime, default=datetime.utcnow)
+    start_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     end_date = Column(DateTime, nullable=True)
     status = Column(Enum(AuditStatus), default=AuditStatus.PLANNED)
     notes = Column(String, nullable=True)

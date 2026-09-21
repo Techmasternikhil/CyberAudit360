@@ -1,7 +1,7 @@
 import os
 import io
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 import docx
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -48,7 +48,7 @@ class ReportingService:
 
 ## 1. Executive Summary
 **Organization:** {audit.organization}
-**Date:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
+**Date:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
 **Auditor:** {audit.auditor}
 **Overall Security Score:** {security_score_data['score']}/100
 
@@ -68,7 +68,7 @@ class ReportingService:
 """
         for f in findings:
             mappings = FrameworkMapper.map_finding(f.title, f.description)
-            mapping_str = ", ".join([f"{k}: {v}" for k, v in mappings.items()])
+            mapping_str = FrameworkMapper.format_mappings(mappings, separator=", ")
             sev_val = f.severity.value if hasattr(f.severity, "value") else str(f.severity)
             stat_val = f.status.value if hasattr(f.status, "value") else str(f.status)
             
@@ -98,6 +98,17 @@ class ReportingService:
         file_path = os.path.join(output_dir, f"audit_report_{audit_id}.md")
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(report_content)
+        return file_path
+
+    @staticmethod
+    def generate_docx_report(audit: Audit, findings: List[Finding], output_dir: str = "reports") -> str:
+        """Generates an executive-grade Word (.docx) cybersecurity audit report and writes to file."""
+        os.makedirs(output_dir, exist_ok=True)
+        docx_stream = ReportingService.generate_docx_stream(audit, findings)
+        audit_id = audit.id if audit else "assessment"
+        file_path = os.path.join(output_dir, f"audit_report_{audit_id}.docx")
+        with open(file_path, "wb") as f:
+            f.write(docx_stream.getvalue())
         return file_path
 
     @staticmethod
@@ -151,7 +162,7 @@ class ReportingService:
             ("Target Organization", audit.organization or "Internal Assessment"),
             ("Lead Auditor / Team", audit.auditor or "CyberAudit360 Engine"),
             ("Assessment Scope", audit.scope or "Local Workstation & Network Services"),
-            ("Date of Assessment", datetime.utcnow().strftime("%B %d, %Y (%H:%M UTC)"))
+            ("Date of Assessment", datetime.now(timezone.utc).strftime("%B %d, %Y (%H:%M UTC)"))
         ]
 
         for i, (label, val) in enumerate(meta_data):
@@ -389,7 +400,7 @@ class ReportingService:
                 lbl_map.font.bold = True
                 lbl_map.font.size = Pt(9)
                 lbl_map.font.color.rgb = C_MUTED
-                map_str = " | ".join([f"{k}: {v}" for k, v in mappings.items()])
+                map_str = FrameworkMapper.format_mappings(mappings, separator=" | ")
                 r_map = p_map.add_run(map_str)
                 r_map.font.size = Pt(9)
                 r_map.font.italic = True

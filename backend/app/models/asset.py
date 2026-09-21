@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, DateTime, Enum
 from sqlalchemy.orm import relationship
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import Base
 
 class AssetType(str, enum.Enum):
@@ -33,7 +33,7 @@ class Asset(Base):
     environment = Column(String, nullable=True)
     notes = Column(String, nullable=True)
     discovery_source = Column(String)
-    discovery_timestamp = Column(DateTime, default=datetime.utcnow)
+    discovery_timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     status = Column(String, default="ACTIVE")
 
     # Relationships
