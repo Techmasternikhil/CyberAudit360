@@ -6,30 +6,40 @@
 [![React](https://img.shields.io/badge/frontend-React%2019%20%2B%20Vite-61DAFB.svg?logo=react&logoColor=black)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/styling-TailwindCSS%20v4-38B2AC.svg?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Word Export](https://img.shields.io/badge/reporting-DOCX%20%26%20Markdown-2B579A.svg?logo=microsoftword&logoColor=white)](https://python-docx.readthedocs.io/)
-[![Tests](https://img.shields.io/badge/tests-7%20passing%20(pytest)-brightgreen.svg?logo=pytest&logoColor=white)](https://docs.pytest.org/)
+[![Tests](https://img.shields.io/badge/tests-24%20passing%20(pytest)-brightgreen.svg?logo=pytest&logoColor=white)](https://docs.pytest.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## 📸 Platform Dashboard
+## 📸 Platform Dashboard & Interface Preview
 
-<!-- ================================================================= -->
-<!--                    DASHBOARD SCREENSHOT PREVIEW                   -->
-<!--  You can replace 'docs/screenshots/dashboard.png' with your own   -->
-<!--  image anytime. The project includes a live capture below.        -->
-<!-- ================================================================= -->
-
+### 1. Interactive SOC Security Dashboard
 <p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="CyberAudit360 SOC Dashboard" width="90%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+  <img src="docs/screenshots/dashboard.png" alt="CyberAudit360 SOC Dashboard" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+</p>
+<p align="center">
+  <em>Figure 1: CyberAudit360 Interactive SOC Dashboard featuring real-time 0–100 Security Scoring, compliance framework progress (NIST CSF 2.0, CIS v8.1, ISO 27001), active findings, and inventoried assets.</em>
 </p>
 
+<br />
+
+### 2. Deep Finding Inspection & Multi-Factor Risk Breakdown
 <p align="center">
-  <em>Figure 1: CyberAudit360 Interactive SOC Dashboard featuring real-time 0–100 Security Scoring, Live Local Scan badging, and automated findings management.</em>
+  <img src="docs/screenshots/finding_details.png" alt="Finding Inspection and Remediation Guidance" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+</p>
+<p align="center">
+  <em>Figure 2: Expanded vulnerability inspection displaying CVSS base score, business criticality, severity badging, and prioritized remediation guidance.</em>
 </p>
 
-> 💡 **Tip for Adding More Screenshots:**  
-> Place your images in [`docs/screenshots/`](docs/screenshots/) (e.g., `word_report_sample.png`, `terminal_run.png`) and link them using standard markdown syntax:  
-> `![Description](docs/screenshots/your-image.png)`
+<br />
+
+### 3. Interactive Remediation & Dynamic Posture Uplift
+<p align="center">
+  <img src="docs/screenshots/remediation_workflow.png" alt="Remediation Workflow and Dynamic Score Uplift" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+</p>
+<p align="center">
+  <em>Figure 3: Marking a critical finding as Resolved immediately updates the overall security posture (73 → 88 score boost) and recalculates compliance framework coverage in real time.</em>
+</p>
 
 ---
 
@@ -67,32 +77,42 @@ CyberAudit360 is built on a modular decoupled architecture dividing defensive sc
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["Frontend Layer (React 19 + Vite + Tailwind v4)"]
-        UI["SOC Dashboard UI"]
-        Controls["Actions: Run Audit | Load Demo | Export Word | Resolve"]
-        Filters["Severity & Classification Filters"]
+    subgraph Frontend["Frontend Layer (React 19 + TypeScript + Vite + Tailwind v4)"]
+        direction TB
+        HeaderComp["Header (Actions, Status, Word & MD Exports)"]
+        MetricComp["MetricCards (Score 0-100, Findings, Assets)"]
+        ComplianceComp["ComplianceCoverageWidget (NIST, CIS, ISO)"]
+        FindingComp["FindingCard (Severity, CVSS, Evidence, Remediation)"]
+        AssetComp["AssetList (Discovered Hosts & Workstations)"]
+        ApiService["Centralized API Client (services/api.ts)"]
+        
+        HeaderComp --> ApiService
+        MetricComp --> ApiService
+        ComplianceComp --> ApiService
+        FindingComp --> ApiService
+        AssetComp --> ApiService
     end
 
-    subgraph Backend["Backend API Layer (FastAPI + SQLAlchemy)"]
+    subgraph Backend["Backend API Layer (FastAPI + SQLAlchemy + Pydantic v2)"]
         Router["REST API Router (/api)"]
         
-        subgraph Engines["Core Analytical & Scanning Engines"]
-            InventoryEng["Inventory Engine (local_inventory.py)"]
+        subgraph Services["Decoupled Analytical & Scanning Services"]
+            InventoryEng["Inventory Service (inventory_service.py)"]
             PortScanEng["Port Scanner (port_scanner.py)"]
             RiskEng["Risk Engine (risk_engine.py)"]
             ComplianceEng["Framework Mapper (framework_mapper.py)"]
-            ReportEng["Word Report Engine (reporting_service.py)"]
-            EvidenceEng["Evidence Integrity (evidence_service.py)"]
+            ReportEng["Word DOCX & MD Engine (reporting_service.py)"]
+            EvidenceEng["Evidence Integrity SHA-256 (evidence_service.py)"]
+            SeedEng["Enterprise Demo Seeder (seed_service.py)"]
         end
 
-        DB[(SQLite Database)]
+        DB[(SQLite Database via SQLAlchemy)]
     end
 
-    Controls -->|HTTP POST/GET/PATCH| Router
-    Router --> Engines
-    Engines --> DB
-    DB --> Router
-    Router -->|JSON / DOCX Stream| UI
+    ApiService -->|HTTP REST / JSON / DOCX Stream| Router
+    Router --> Services
+    Services --> DB
+    DB --> Services
 ```
 
 ---
@@ -172,7 +192,7 @@ Utilizes `python-docx` and low-level XML styling to dynamically compile:
 
 #### 1. Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/CyberAudit360.git
+git clone https://github.com/Techmasternikhil/CyberAudit360.git
 cd CyberAudit360
 ```
 
@@ -236,14 +256,37 @@ cd backend
 python -m pytest -v
 ```
 
-### Test Coverage Results (100% Passing):
-- `tests/test_api.py::test_health_check` **PASSED**
-- `tests/test_api.py::test_get_findings_and_score` **PASSED**
-- `tests/test_api.py::test_scan_endpoint` **PASSED**
-- `tests/test_port_scanner.py::test_scan_port_closed` **PASSED**
-- `tests/test_port_scanner.py::test_scan_target` **PASSED**
-- `tests/test_risk_engine.py::test_calculate_finding_risk` **PASSED**
-- `tests/test_risk_engine.py::test_calculate_overall_security_score` **PASSED**
+### Test Coverage Results (24/24 Tests Passing, 100%):
+- **API Endpoints & Integration (`tests/test_api.py`):**
+  - `test_health_check` **PASSED**
+  - `test_get_findings_and_score` **PASSED**
+  - `test_scan_endpoint` **PASSED**
+  - `test_create_asset_success` **PASSED**
+  - `test_create_asset_duplicate_ip` **PASSED**
+  - `test_create_asset_invalid_ip` **PASSED**
+  - `test_toggle_finding_status` **PASSED**
+  - `test_toggle_finding_not_found` **PASSED**
+  - `test_seed_demo_endpoint` **PASSED**
+  - `test_reset_demo_endpoint` **PASSED**
+  - `test_report_export_docx` **PASSED**
+  - `test_report_export_md` **PASSED**
+- **Defensive Port Scanner (`tests/test_port_scanner.py`):**
+  - `test_scan_port_closed` **PASSED**
+  - `test_scan_target` **PASSED**
+- **Multi-Factor Risk Scoring Engine (`tests/test_risk_engine.py`):**
+  - `test_calculate_finding_risk` **PASSED**
+  - `test_calculate_overall_security_score` **PASSED**
+- **Evidence Integrity & SHA-256 Chain-of-Custody (`tests/test_evidence_service.py`):**
+  - `test_sha256_hash_string` **PASSED**
+  - `test_compute_evidence_hash_dict` **PASSED**
+  - `test_create_evidence_record` **PASSED**
+- **Compliance Framework Mapping (`tests/test_framework_mapper.py`):**
+  - `test_map_finding_to_frameworks` **PASSED**
+  - `test_calculate_compliance_coverage_empty` **PASSED**
+  - `test_calculate_compliance_coverage_with_findings` **PASSED**
+- **Executive Word & Markdown Reporting (`tests/test_reporting_service.py`):**
+  - `test_generate_markdown_report` **PASSED**
+  - `test_generate_docx_report` **PASSED**
 
 ---
 
